@@ -26,10 +26,10 @@ docker compose up --build
 
 | Serviço | URL local | Produção |
 |---|---|---|
-| API | http://localhost:8080/api/ | https://bolao.breskovit.cloud/api/ |
-| Swagger (docs interativas) | http://localhost:8080/docs | https://bolao.breskovit.cloud/docs |
-| Dashboard Admin | http://localhost:3001 | — |
-| Health check | http://localhost:8080/health | https://bolao.breskovit.cloud/health |
+| API | http://localhost:8080/api/ | - |
+| Swagger (docs interativas) | http://localhost:8080/docs | -|
+| Dashboard Admin | http://localhost:3001 | - |
+| Health check | http://localhost:8080/health | - |
 
 ## Estrutura de pastas do servidor
 
