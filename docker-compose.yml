@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bolao
+      POSTGRES_PASSWORD: bolao
+      POSTGRES_DB: bolao
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bolao -d bolao"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://bolao:bolao@db:5432/bolao
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-troque-esta-senha}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+  frontend:
+    build:
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      - app
+    ports:
+      - "3001:80"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+volumes:
+  pgdata:
+  n8n_data:

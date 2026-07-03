@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bolão Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f1117;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:#1a1d27;border:1px solid #2d3148;border-radius:12px;padding:40px;width:360px}
+.login-box h1{font-size:1.5rem;margin-bottom:8px;color:#7c8ff7}
+.login-box p{color:#8892a4;margin-bottom:24px;font-size:.9rem}
+input,select{width:100%;padding:10px 14px;background:#0f1117;border:1px solid #2d3148;border-radius:8px;
+  color:#e2e8f0;font-size:.95rem;outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:#7c8ff7}
+button{width:100%;padding:11px;background:#7c8ff7;border:none;border-radius:8px;color:#fff;
+  font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s;margin-top:12px}
+button:hover{background:#6a7de8}
+button:disabled{background:#3a3f55;cursor:not-allowed}
+.err{color:#f87171;font-size:.85rem;margin-top:8px}
+#panel{display:none;padding:24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1200px;margin:0 auto}
+@media(max-width:768px){.grid{grid-template-columns:1fr}}
+.card{background:#1a1d27;border:1px solid #2d3148;border-radius:12px;padding:20px}
+.card h2{font-size:1rem;color:#7c8ff7;margin-bottom:16px;border-bottom:1px solid #2d3148;padding-bottom:10px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;
+  border-bottom:1px solid #1e2235;font-size:.9rem}
+.stat-row:last-child{border-bottom:none}
+.stat-val{color:#a5b4fc;font-weight:600}
+.badge{display:inline-block;background:#2d3148;padding:2px 8px;border-radius:12px;font-size:.75rem;
+  color:#94a3b8;margin:2px}
+#feed{max-height:200px;overflow-y:auto;font-size:.78rem;font-family:monospace}
+#feed div{padding:3px 0;border-bottom:1px solid #1e2235;color:#94a3b8}
+#feed div:last-child{border-bottom:none}
+.status-ok{color:#34d399}
+.status-err{color:#f87171}
+.match-info{font-size:1.2rem;font-weight:600;text-align:center;padding:12px 0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;font-size:.82rem;color:#8892a4;margin-bottom:4px;margin-top:10px}
+.note{font-size:.8rem;color:#f87171;margin-top:8px;padding:8px;background:#2a1a1a;border-radius:6px}
+.note.info{color:#7c8ff7;background:#1a1d2a}
+.top-bar{display:flex;justify-content:space-between;align-items:center;max-width:1200px;
+  margin:0 auto 20px;padding-bottom:16px;border-bottom:1px solid #2d3148}
+.top-bar h1{color:#7c8ff7;font-size:1.4rem}
+.btn-sm{width:auto;padding:6px 14px;font-size:.85rem;margin-top:0;background:#374151}
+.btn-sm:hover{background:#4b5563}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block;margin-right:6px}
+.ws-dot.off{background:#f87171}
+.btn-danger{background:#dc2626}
+.btn-danger:hover{background:#b91c1c}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginSection">
+  <div class="login-box">
+    <h1>⚽ Bolão Admin</h1>
+    <p>Entre com a senha do painel de administração</p>
+    <input type="password" id="pwdInput" placeholder="Senha" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button onclick="doLogin()">Entrar</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div id="panel">
+  <div class="top-bar">
+    <h1>⚽ Bolão Admin</h1>
+    <div>
+      <span class="ws-dot" id="wsDot"></span>
+      <span id="wsStatus" style="font-size:.82rem;color:#8892a4">desconectado</span>
+      <button class="btn-sm" onclick="doLogout()" style="margin-left:12px">Sair</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Monitor -->
+    <div class="card">
+      <h2>Monitor</h2>
+      <div class="stat-row"><span>Uptime desde</span><span class="stat-val" id="mStarted">—</span></div>
+      <div class="stat-row"><span>Porta</span><span class="stat-val" id="mPort">—</span></div>
+      <div class="stat-row"><span>Total requests</span><span class="stat-val" id="mTotal">—</span></div>
+    </div>
+
+    <!-- Clientes recentes -->
+    <div class="card">
+      <h2>Clientes Recentes (5 min)</h2>
+      <div id="mClients"><span style="color:#8892a4;font-size:.85rem">nenhum ainda</span></div>
+    </div>
+
+    <!-- Endpoints -->
+    <div class="card">
+      <h2>Requests por Endpoint</h2>
+      <div id="mRoutes"><span style="color:#8892a4;font-size:.85rem">aguardando dados...</span></div>
+    </div>
+
+    <!-- Feed -->
+    <div class="card">
+      <h2>Feed de Requests</h2>
+      <div id="feed"></div>
+    </div>
+
+    <!-- Partida atual -->
+    <div class="card">
+      <h2>Partida Atual</h2>
+      <div id="currentMatch">Carregando...</div>
+      <div id="resultForm" style="display:none">
+        <label>Placar final</label>
+        <div class="two-col">
+          <div>
+            <label id="labelA">Time A</label>
+            <input type="number" id="resA" min="0" value="0"/>
+          </div>
+          <div>
+            <label id="labelB">Time B</label>
+            <input type="number" id="resB" min="0" value="0"/>
+          </div>
+        </div>
+        <button onclick="finishMatch()" style="margin-top:14px">✅ Finalizar Partida</button>
+        <div class="err" id="resultErr"></div>
+      </div>
+    </div>
+
+    <!-- Clientes da partida atual -->
+    <div class="card">
+      <h2>Clientes da Partida Atual <button class="btn-sm" onclick="loadMatchClients()" style="float:right">🔄</button></h2>
+      <div id="mMatchClients"><span style="color:#8892a4;font-size:.85rem">nenhuma partida ativa</span></div>
+    </div>
+
+    <!-- Nova partida -->
+    <div class="card">
+      <h2>Cadastrar Nova Partida</h2>
+      <div id="newMatchNote" class="note" style="display:none">
+        Finalize a partida atual antes de cadastrar outra.
+      </div>
+      <div id="newMatchForm">
+        <label>Time A</label>
+        <select id="selA"></select>
+        <label>Time B</label>
+        <select id="selB"></select>
+        <label>Data/Hora do Jogo (opcional)</label>
+        <input type="datetime-local" id="kickoffAt"/>
+        <button onclick="createMatch()" id="btnCreate">➕ Cadastrar Partida</button>
+        <div class="err" id="createErr"></div>
+      </div>
+    </div>
+
+    <!-- Zona de perigo -->
+    <div class="card">
+      <h2 style="color:#f87171">Zona de Perigo</h2>
+      <p style="font-size:.85rem;color:#8892a4;margin-bottom:12px">
+        Apaga todas as partidas, palpites e logs. Os jogadores cadastrados (Diego e Cauã) são mantidos, voltando a 0 pontos.
+      </p>
+      <button class="btn-danger" onclick="resetAll()">🗑️ Limpar Banco de Dados</button>
+      <div class="err" id="resetErr"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let adminToken = sessionStorage.getItem('adminToken');
+let currentMatchId = null;
+let ws = null;
+const CLIENT_ID = 'server';
+
+async function doLogin() {
+  const pwd = document.getElementById('pwdInput').value;
+  document.getElementById('loginErr').textContent = '';
+  try {
+    const r = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Client-Id': CLIENT_ID },
+      body: JSON.stringify({ password: pwd })
+    });
+    const d = await r.json();
+    if (!r.ok) { document.getElementById('loginErr').textContent = d.error || 'Erro'; return; }
+    adminToken = d.token;
+    sessionStorage.setItem('adminToken', adminToken);
+    showPanel();
+  } catch(e) { document.getElementById('loginErr').textContent = 'Erro de rede'; }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('adminToken');
+  adminToken = null;
+  if (ws) ws.close();
+  document.getElementById('panel').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'flex';
+}
+
+function showPanel() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('panel').style.display = 'block';
+  loadCountries();
+  loadCurrentMatch();
+  connectWs();
+}
+
+async function loadCountries() {
+  const r = await fetch('/api/countries', { headers: { 'X-Client-Id': CLIENT_ID } });
+  const countries = await r.json();
+  const selA = document.getElementById('selA');
+  const selB = document.getElementById('selB');
+  selA.innerHTML = '';
+  selB.innerHTML = '';
+  for (const c of countries) {
+    const opt = `<option value="${c.name}">${c.flag} ${c.name}</option>`;
+    selA.insertAdjacentHTML('beforeend', opt);
+    selB.insertAdjacentHTML('beforeend', opt);
+  }
+  // default different
+  if (selB.options.length > 1) selB.selectedIndex = 1;
+}
+
+async function loadCurrentMatch() {
+  try {
+    const r = await fetch('/api/', { headers: { 'X-Client-Id': CLIENT_ID } });
+    const el = document.getElementById('currentMatch');
+    const formEl = document.getElementById('resultForm');
+    const newMatchNote = document.getElementById('newMatchNote');
+    const newMatchForm = document.getElementById('newMatchForm');
+    const btnCreate = document.getElementById('btnCreate');
+    const selA = document.getElementById('selA');
+    const selB = document.getElementById('selB');
+
+    if (r.status === 404) {
+      el.innerHTML = '<div class="note info">Nenhuma partida cadastrada.</div>';
+      formEl.style.display = 'none';
+      currentMatchId = null;
+      newMatchNote.style.display = 'none';
+      btnCreate.disabled = false;
+      selA.disabled = false; selB.disabled = false;
+      document.getElementById('mMatchClients').innerHTML = '<span style="color:#8892a4;font-size:.85rem">nenhuma partida ativa</span>';
+      return;
+    }
+
+    const m = await r.json();
+    currentMatchId = m.id;
+    const isScheduled = m.status === 'scheduled';
+
+    let html = `<div class="match-info">${m.team_a.flag} ${m.team_a.name} vs ${m.team_b.flag} ${m.team_b.name}</div>`;
+    html += `<div class="stat-row"><span>Status</span><span class="stat-val">${m.status}</span></div>`;
+    if (m.real_score) {
+      html += `<div class="stat-row"><span>Resultado</span><span class="stat-val">${m.real_score.a} x ${m.real_score.b}</span></div>`;
+    }
+    el.innerHTML = html;
+
+    if (isScheduled) {
+      document.getElementById('labelA').textContent = m.team_a.name;
+      document.getElementById('labelB').textContent = m.team_b.name;
+      formEl.style.display = 'block';
+      newMatchNote.style.display = 'block';
+      btnCreate.disabled = true;
+      selA.disabled = true; selB.disabled = true;
+    } else {
+      formEl.style.display = 'none';
+      newMatchNote.style.display = 'none';
+      btnCreate.disabled = false;
+      selA.disabled = false; selB.disabled = false;
+    }
+
+    loadMatchClients();
+  } catch(e) {
+    document.getElementById('currentMatch').textContent = 'Erro ao carregar';
+  }
+}
+
+function parseServerTime(s) {
+  // SQLite's datetime('now') has no timezone suffix but is always UTC; Postgres already returns a proper ISO string.
+  return new Date(typeof s === 'string' && !s.includes('T') ? s.replace(' ', 'T') + 'Z' : s);
+}
+
+async function loadMatchClients() {
+  const el = document.getElementById('mMatchClients');
+  if (!currentMatchId) { el.innerHTML = '<span style="color:#8892a4;font-size:.85rem">nenhuma partida ativa</span>'; return; }
+  try {
+    const r = await fetch(`/api/matches/${currentMatchId}/clients`, {
+      headers: { 'X-Admin-Token': adminToken, 'X-Client-Id': CLIENT_ID }
+    });
+    if (!r.ok) { el.innerHTML = '<span style="color:#8892a4;font-size:.85rem">erro ao carregar</span>'; return; }
+    const clients = await r.json();
+    if (clients.length === 0) {
+      el.innerHTML = '<span style="color:#8892a4;font-size:.85rem">nenhum palpite ainda</span>';
+      return;
+    }
+    el.innerHTML = clients.map(c => `
+      <div class="stat-row">
+        <span>${c.username} <span style="color:#64748b">(${c.ip} · ${c.client})</span></span>
+        <span class="stat-val" style="font-size:.78rem">${parseServerTime(c.last_seen).toLocaleString('pt-BR')} · ${c.request_count}x</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    el.innerHTML = '<span style="color:#8892a4;font-size:.85rem">erro de rede</span>';
+  }
+}
+
+async function finishMatch() {
+  const sa = parseInt(document.getElementById('resA').value, 10);
+  const sb = parseInt(document.getElementById('resB').value, 10);
+  document.getElementById('resultErr').textContent = '';
+  if (isNaN(sa) || isNaN(sb)) { document.getElementById('resultErr').textContent = 'Placares inválidos'; return; }
+  try {
+    const r = await fetch(`/api/matches/${currentMatchId}/result`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken, 'X-Client-Id': CLIENT_ID },
+      body: JSON.stringify({ score_a: sa, score_b: sb })
+    });
+    const d = await r.json();
+    if (!r.ok) { document.getElementById('resultErr').textContent = d.error || 'Erro'; return; }
+    loadCurrentMatch();
+  } catch(e) { document.getElementById('resultErr').textContent = 'Erro de rede'; }
+}
+
+async function createMatch() {
+  const teamA = document.getElementById('selA').value;
+  const teamB = document.getElementById('selB').value;
+  const kickoffAt = document.getElementById('kickoffAt').value;
+  document.getElementById('createErr').textContent = '';
+  if (teamA === teamB) { document.getElementById('createErr').textContent = 'Times devem ser diferentes'; return; }
+  const body = { team_a: teamA, team_b: teamB };
+  if (kickoffAt) body.kickoff_at = new Date(kickoffAt).toISOString();
+  try {
+    const r = await fetch('/api/matches', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken, 'X-Client-Id': CLIENT_ID },
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (!r.ok) { document.getElementById('createErr').textContent = d.error || 'Erro'; return; }
+    loadCurrentMatch();
+  } catch(e) { document.getElementById('createErr').textContent = 'Erro de rede'; }
+}
+
+async function resetAll() {
+  document.getElementById('resetErr').textContent = '';
+  if (!confirm('Isso vai apagar TODAS as partidas, palpites e logs. Os jogadores cadastrados voltam a 0 pontos. Tem certeza?')) return;
+  try {
+    const r = await fetch('/api/admin/reset', {
+      method: 'POST',
+      headers: { 'X-Admin-Token': adminToken, 'X-Client-Id': CLIENT_ID }
+    });
+    const d = await r.json();
+    if (!r.ok) { document.getElementById('resetErr').textContent = d.error || 'Erro'; return; }
+    loadCurrentMatch();
+  } catch(e) { document.getElementById('resetErr').textContent = 'Erro de rede'; }
+}
+
+function connectWs() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws?token=${adminToken}`);
+  const dot = document.getElementById('wsDot');
+  const statusEl = document.getElementById('wsStatus');
+
+  ws.onopen = () => { dot.className = 'ws-dot'; statusEl.textContent = 'conectado'; };
+  ws.onclose = () => {
+    dot.className = 'ws-dot off'; statusEl.textContent = 'reconectando...';
+    setTimeout(connectWs, 3000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.snapshot) updateMonitor(msg.snapshot);
+    if (msg.type === 'request' && msg.data) addFeedEntry(msg.data);
+  };
+}
+
+function updateMonitor(s) {
+  document.getElementById('mStarted').textContent = new Date(s.startedAt).toLocaleString('pt-BR');
+  document.getElementById('mPort').textContent = s.port;
+  document.getElementById('mTotal').textContent = s.totalRequests;
+
+  const routesEl = document.getElementById('mRoutes');
+  const entries = Object.entries(s.byRoute).sort((a,b) => b[1]-a[1]);
+  if (entries.length === 0) { routesEl.innerHTML = '<span style="color:#8892a4;font-size:.85rem">nenhuma request ainda</span>'; }
+  else {
+    routesEl.innerHTML = entries.map(([k,v]) =>
+      `<div class="stat-row"><span style="font-size:.82rem;font-family:monospace">${k}</span><span class="stat-val">${v}</span></div>`
+    ).join('');
+  }
+
+  const clientsEl = document.getElementById('mClients');
+  if (!s.recentClients || s.recentClients.length === 0) {
+    clientsEl.innerHTML = '<span style="color:#8892a4;font-size:.85rem">nenhum ainda</span>';
+  } else {
+    clientsEl.innerHTML = s.recentClients.map(c =>
+      `<span class="badge">${c.client} (${c.ip})</span>`
+    ).join('');
+  }
+
+  // Update feed with recent requests
+  const feed = document.getElementById('feed');
+  if (s.recentRequests && feed.children.length === 0) {
+    for (const r of [...s.recentRequests].reverse()) addFeedEntry(r, true);
+  }
+}
+
+function addFeedEntry(r, prepend = false) {
+  const feed = document.getElementById('feed');
+  const cls = r.status >= 400 ? 'status-err' : 'status-ok';
+  const div = document.createElement('div');
+  const localTime = new Date(r.time).toLocaleTimeString('pt-BR');
+  div.innerHTML = `<span style="color:#64748b">${localTime}</span> `
+    + `<span class="${cls}">${r.status}</span> `
+    + `<span style="color:#7c8ff7">${r.method}</span> ${r.path}`
+    + ` <span style="color:#8892a4">[${r.client}]</span>`
+    + ` <span style="color:#64748b">${r.ms}ms</span>`;
+  if (prepend) feed.insertBefore(div, feed.firstChild);
+  else feed.insertBefore(div, feed.firstChild);
+  while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+}
+
+// auto-login if token in sessionStorage
+if (adminToken) {
+  // verify token is still valid by showing panel; if WS fails it'll reconnect after re-login
+  showPanel();
+}
+</script>
+</body>
+</html>

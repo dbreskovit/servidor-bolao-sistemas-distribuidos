@@ -1,0 +1,294 @@
+{
+  "info": {
+    "name": "Bolão API",
+    "description": "API pública do Bolão de Futebol - Copa 2026",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/health",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Matches (Público)",
+      "item": [
+        {
+          "name": "Partida Atual",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Client-Id",
+                "value": "cliente-python",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", ""]
+            },
+            "description": "Retorna a partida ativa (scheduled) ou a mais recente finalizada"
+          }
+        },
+        {
+          "name": "Lista de Partidas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Client-Id",
+                "value": "cliente-java",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/matches",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "matches"]
+            },
+            "description": "Lista todas as partidas"
+          }
+        },
+        {
+          "name": "Uma Partida por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/matches/1",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "matches", "1"]
+            },
+            "description": "Retorna uma partida específica pelo ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predictions (Público)",
+      "item": [
+        {
+          "name": "Cadastrar/Atualizar Palpite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Client-Id",
+                "value": "cliente-csharp",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"joao\",\n  \"score_a\": 3,\n  \"score_b\": 1\n}"
+            },
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/match?id=1",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "match"],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Cria ou atualiza um palpite. Upsert por (match_id, username)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ranking (Público)",
+      "item": [
+        {
+          "name": "Ranking Geral",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Client-Id",
+                "value": "cliente-golang",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/ranking",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "ranking"]
+            },
+            "description": "Ranking com pontuação competitiva (1,2,2,4...)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Countries (Público)",
+      "item": [
+        {
+          "name": "Lista de Países",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/countries",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "countries"]
+            },
+            "description": "48 países da Copa 2026 com bandeira emoji"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin (Protegido)",
+      "item": [
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"troque-esta-senha\"\n}"
+            },
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/admin/login",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "admin", "login"]
+            },
+            "description": "Retorna um token de sessão válido por 8h"
+          }
+        },
+        {
+          "name": "Criar Partida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Admin-Token",
+                "value": "seu-token-aqui"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"team_a\": \"Brasil\",\n  \"team_b\": \"Argentina\",\n  \"kickoff_at\": \"2026-07-01T18:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/matches",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "matches"]
+            },
+            "description": "Cria uma nova partida (requer token de admin)"
+          }
+        },
+        {
+          "name": "Finalizar Partida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Admin-Token",
+                "value": "seu-token-aqui"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score_a\": 3,\n  \"score_b\": 1\n}"
+            },
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/api/matches/1/result",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["api", "matches", "1", "result"]
+            },
+            "description": "Finaliza a partida e calcula pontos (requer token de admin)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Docs",
+      "item": [
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/docs",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["docs"]
+            }
+          }
+        },
+        {
+          "name": "Dashboard Admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://bolao.breskovit.cloud:8080/dashboard",
+              "protocol": "http",
+              "host": ["bolao", "breskovit", "cloud"],
+              "port": "8080",
+              "path": ["dashboard"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

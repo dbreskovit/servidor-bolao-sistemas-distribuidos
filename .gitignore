@@ -1,0 +1,7 @@
+.env
+bolao.db*
+/node_modules
+/logs
+/dist
+frontend/node_modules
+frontend/dist
