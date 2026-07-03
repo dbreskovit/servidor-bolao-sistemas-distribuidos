@@ -74,7 +74,7 @@ A API serve **4 clientes**, cada um desenvolvido por um time em uma linguagem/SO
 | Cliente Python | 🐍 Python | [BolaoCopa2026-ClientePythonSD — Release v1](https://github.com/Talitavds/BolaoCopa2026-ClientePythonSD/releases/tag/v1) |
 | Cliente B4A | 🤖 B4A (Android) | [cliente-android-darley](https://github.com/dbreskovit/cliente-android-darley) |
 | Cliente React Native | ⚛️ React Native (Android) | [cliente-android-diego-duarte](https://github.com/dbreskovit/cliente-android-diego-duarte) |
-| Cliente 4 | — | *a definir* |
+| Cliente Electron | — | ⚛️ Electron (Windows) | [bolao-copa](https://github.com/GeovanePicolotto/bolao-copa) |
 
 O que todo cliente precisa implementar (contratos completos no [API_PUBLICA.md](API_PUBLICA.md) e no Swagger `/docs`):
 
